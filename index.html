@@ -29,13 +29,13 @@
         
         /* --- 左侧：时间 + 天气 (42%) --- */
         .left { 
-            flex: 0.84; /* 稍微给左边多一点点空间放插件 */
+            flex: 0.84; 
             display: flex; 
             flex-direction: column; 
             justify-content: flex-start;
             align-items: center; 
             border-right: 1px solid #333; 
-            padding: 30px 0 0 0; /* 减少左右padding，让插件撑满 */
+            padding: 30px 0 0 0; 
             background: #000;
             overflow: hidden;
         }
@@ -67,7 +67,7 @@
             flex: 1; 
             display: flex;
             justify-content: center;
-            align-items: center; /* 垂直居中 */
+            align-items: center; 
             position: relative;
         }
 
@@ -77,10 +77,8 @@
             height: 100%;
             overflow: hidden;
             /* 
-               针对 iPad 3 Retina 的特殊处理：
-               Meteoblue 插件在移动端默认会显示得比较小。
-               这里我们用 CSS Zoom/Scale 把它无损放大，
-               让它填满左下角的空间，看起来像原生 App。
+               放大 1.15 倍以适配 Retina 屏，
+               并确保填满左下角
             */
             transform: scale(1.15); 
             transform-origin: top center;
@@ -90,7 +88,7 @@
 
         iframe.weather-iframe {
             border: none;
-            width: 320px !important; /* 强制宽度适配 iPad 分栏 */
+            width: 320px !important; 
             height: 480px !important;
             background: transparent;
         }
@@ -164,14 +162,13 @@
         <div class="weather-box">
             <div class="weather-frame-wrapper">
                 <!-- 
-                    Meteoblue 天气插件
-                    - 城市: 天津 (Tianjin)
-                    - 模式: 3小时预报 (Three Hour)
-                    - 颜色: 深色模式 (Dark)
-                    - 单位: 摄氏度 (Celsius)
+                    🔴 关键修改：
+                    1. 链接改为 /zh/ 开头，强制中文界面。
+                    2. ID 改为 tianjin_china_1800163 (天津的准确ID)。
+                    3. 参数 geoloc=fixed 放在最前面，强制不使用IP定位。
                 -->
                 <iframe class="weather-iframe" 
-                    src="https://www.meteoblue.com/en/weather/widget/three/tianjin_china_101652?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=dark"  
+                    src="https://www.meteoblue.com/zh/%E5%A4%A9%E6%B0%94/widget/three/tianjin_china_1800163?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=dark"  
                     frameborder="0" 
                     scrolling="NO" 
                     allowtransparency="true" 
