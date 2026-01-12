@@ -2,27 +2,23 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>iPad Dashboard</title>
-    <!-- 关键：允许全屏运行 -->
+    <title>iPad 3 Dashboard</title>
+    <!-- iOS Web App 配置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- 状态栏颜色：黑色 -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Dashboard">
-    <!-- 禁止缩放 -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <style>
-        /* 基础样式 */
+        /* 全局样式 */
         body { 
             background: #000; 
             color: #fff; 
             font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; 
             margin: 0; 
             overflow: hidden; 
-            /* 防止 iOS 橡皮筋滚动效果 */
-            position: fixed;
             width: 100%;
             height: 100%;
+            -webkit-font-smoothing: antialiased; 
         }
         
         .container { 
@@ -31,66 +27,104 @@
             width: 100vw;
         }
         
-        /* --- 左侧区域 --- */
+        /* --- 左侧：时间 + 天气 (45%) --- */
         .left { 
-            flex: 1; 
+            flex: 0.9; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
             align-items: center; 
-            border-right: 1px solid #333; 
-            padding: 20px;
+            border-right: 2px solid #222; 
+            background: #000;
         }
         
-        #time { font-size: 16vw; font-weight: bold; line-height: 1; letter-spacing: -2px; }
-        #date { font-size: 4vw; color: #aaa; margin-top: 10px; margin-bottom: 30px; }
+        #time { 
+            font-size: 16vw; 
+            font-weight: 800; 
+            line-height: 0.9; 
+            letter-spacing: -3px;
+            margin-bottom: 10px;
+            font-variant-numeric: tabular-nums; 
+        }
         
-        /* 天气图片容器 */
+        #date { 
+            font-size: 4.5vw; 
+            color: #bbb; 
+            margin-bottom: 50px; 
+            font-weight: 400;
+        }
+
         .weather-box {
-            margin-top: 20px;
-            filter: invert(1); /* 因为 wttr 生成的是黑字，反转成白字 */
-            opacity: 0.9;
+            width: 100%;
+            height: 180px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: invert(1) hue-rotate(180deg);
+        }
+
+        .weather-box img {
+            width: auto;
+            height: auto;
+            transform: scale(1.6); 
+            image-rendering: -webkit-optimize-contrast;
         }
         
-        /* --- 右侧区域 (日历) --- */
+        /* --- 右侧：日历 (55%) --- */
         .right { 
-            flex: 1.2; 
-            padding: 30px; 
+            flex: 1.1; 
+            padding: 20px 30px; 
             display: flex;
+            flex-direction: column; /* 改为垂直排列，以便放标题 */
             justify-content: center;
             align-items: center;
         }
 
-        /* 手写日历样式 */
+        /* 新增：日历顶部的年月标题 */
+        #calendar-header {
+            font-size: 5vw;
+            font-weight: bold;
+            color: #fff;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px; /* 和表格拉开距离 */
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333; /* 加一条分割线 */
+        }
+
         #calendar-table {
             width: 100%;
-            height: 90%;
+            height: 85%; /* 稍微减小高度，给标题腾位置 */
             border-collapse: collapse;
-            text-align: center;
+            table-layout: fixed;
         }
+
         #calendar-table th {
-            font-size: 2vw;
-            color: #ea4c89; /* 星期几的颜色 */
-            padding-bottom: 20px;
+            font-size: 3.5vw;
+            color: #ff3b30; 
+            padding-bottom: 10px;
+            font-weight: normal;
         }
+
         #calendar-table td {
-            font-size: 2.5vw;
+            font-size: 5.5vw; 
             color: #555;
-            height: 12%;
+            vertical-align: middle;
+            text-align: center;
+            font-weight: 400;
+            height: 14%; 
         }
-        #calendar-table td.current-month {
-            color: #fff;
-            font-weight: bold;
-        }
+
+        #calendar-table td.current-month { color: #fff; font-weight: 600; }
+        
         #calendar-table td.today {
             background: #fff;
             color: #000;
-            border-radius: 10px;
+            border-radius: 14px;
+            font-weight: 900; 
         }
-        /* 节日样式 */
-        #calendar-table td.holiday {
-            color: #ea4c89; 
-        }
+        
+        #calendar-table td.weekend { color: #ff453a; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -100,18 +134,15 @@
         <div id="time">00:00</div>
         <div id="date">Loading...</div>
         
-        <!-- 天气：使用图片直链，v2.wttr.in 
-             Tianjin = 城市
-             _0tqp = 样式参数 (0=当前天气, t=透明, q=安静模式, p=添加边距)
-             lang=zh = 中文
-        -->
         <div class="weather-box">
-            <img id="weather-img" src="" alt="Weather" width="280">
+            <img id="weather-img" src="" alt="Weather">
         </div>
     </div>
 
     <div class="right">
-        <!-- 本地 JS 生成的日历 -->
+        <!-- 新增：显示年月 -->
+        <div id="calendar-header"></div>
+        
         <table id="calendar-table">
             <thead>
                 <tr>
@@ -124,7 +155,7 @@
 </div>
 
 <script>
-    // 1. 时钟功能
+    // 1. 时钟
     function updateClock() {
         var now = new Date();
         var h = now.getHours();
@@ -135,76 +166,75 @@
         if(m < 10) m = "0" + m;
         
         document.getElementById("time").innerText = h + ":" + m;
+        // 左侧只显示 日期和星期
         document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
     }
 
-    // 2. 刷新天气图片 (防止缓存，每30分钟刷一次)
+    // 2. 天气
     function updateWeather() {
         var img = document.getElementById("weather-img");
-        // 使用时间戳 bust cache
-        img.src = "https://v2.wttr.in/Tianjin_0tqp_lang=zh.png?_="+ new Date().getTime();
+        img.src = "https://v2.wttr.in/Tianjin_0tqm_lang=zh.png?_=" + new Date().getTime();
     }
 
-    // 3. 生成日历逻辑 (兼容 iOS 9)
+    // 3. 日历
     function generateCalendar() {
         var now = new Date();
         var year = now.getFullYear();
         var month = now.getMonth(); // 0-11
         var today = now.getDate();
 
-        // 当月第一天是星期几
+        // 🔴 更新右侧顶部的年月标题
+        document.getElementById("calendar-header").innerText = year + "年 " + (month + 1) + "月";
+
         var firstDay = new Date(year, month, 1).getDay();
-        // 当月有多少天
         var daysInMonth = new Date(year, month + 1, 0).getDate();
         
         var tbl = document.getElementById("calendar-body");
-        tbl.innerHTML = ""; // 清空
+        tbl.innerHTML = ""; 
 
         var date = 1;
-        // 生成6行 (防止跨月显示不全)
         for (var i = 0; i < 6; i++) {
             var row = document.createElement("tr");
+            var hasDays = false;
 
             for (var j = 0; j < 7; j++) {
                 var cell = document.createElement("td");
                 
-                // 填充空白
                 if (i === 0 && j < firstDay) {
-                    var cellText = document.createTextNode("");
-                    cell.appendChild(cellText);
-                } 
-                else if (date > daysInMonth) {
-                    break;
-                } 
-                else {
-                    var cellText = document.createTextNode(date);
-                    cell.appendChild(cellText);
+                    cell.innerText = "";
+                } else if (date > daysInMonth) {
+                    cell.innerText = "";
+                } else {
+                    cell.innerText = date;
                     cell.className = "current-month";
                     
-                    // 高亮今天
                     if (date === today) {
                         cell.className += " today";
                     }
+                    if (j === 0 || j === 6) {
+                        if(date !== today) {
+                             cell.className += " weekend";
+                        }
+                    }
                     date++;
+                    hasDays = true;
                 }
                 row.appendChild(cell);
             }
-            tbl.appendChild(row);
+            if(hasDays || i < 5) { 
+                tbl.appendChild(row);
+            }
         }
     }
 
-    // 初始化
     updateClock();
     generateCalendar();
     updateWeather();
 
-    // 定时器
-    setInterval(updateClock, 1000); // 每秒刷新时间
-    setInterval(updateWeather, 1800000); // 30分钟刷新天气
-    // 每天凌晨刷新一下日历(简单处理，每小时刷一次防止过夜不更新)
+    setInterval(updateClock, 1000); 
+    setInterval(updateWeather, 1800000); 
     setInterval(generateCalendar, 3600000); 
 
-    // 阻止触摸滑动
     document.addEventListener('touchmove', function(e) { e.preventDefault(); }, false);
 </script>
 
