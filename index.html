@@ -27,26 +27,27 @@
             box-sizing: border-box; 
         }
         
-        /* --- 左侧：时间 + 天气 (40%) --- */
+        /* --- 左侧：时间 + 天气 (42%) --- */
         .left { 
-            flex: 0.8; 
+            flex: 0.84; /* 稍微给左边多一点点空间放插件 */
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-start; /* 从上往下排 */
+            justify-content: flex-start;
             align-items: center; 
             border-right: 1px solid #333; 
-            padding: 40px 10px 10px 10px; /* 顶部留多点空间 */
+            padding: 30px 0 0 0; /* 减少左右padding，让插件撑满 */
             background: #000;
+            overflow: hidden;
         }
         
         /* 时间日期区域 */
         .time-group {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            padding: 0 10px;
         }
 
         #time { 
-            /* 🔴 修改：字体改小，防止越界 */
             font-size: 13vw; 
             font-weight: 800; 
             line-height: 1;
@@ -63,27 +64,40 @@
         /* 天气容器 */
         .weather-box {
             width: 100%;
-            /* 让它占据剩余所有空间 */
             flex: 1; 
             display: flex;
             justify-content: center;
-            align-items: center; /* 居中显示 */
-            filter: invert(1) hue-rotate(180deg);
-            overflow: hidden;
+            align-items: center; /* 垂直居中 */
+            position: relative;
         }
 
-        .weather-box img {
-            /* 🔴 修改：经典版天气图横向较长，我们让它宽度撑满 */
-            width: 100%; 
-            height: auto;
-            object-fit: contain; 
-            /* 稍微放大一点点以利用边缘空间 */
-            transform: scale(1.05); 
+        /* 天气 Iframe 容器 */
+        .weather-frame-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* 
+               针对 iPad 3 Retina 的特殊处理：
+               Meteoblue 插件在移动端默认会显示得比较小。
+               这里我们用 CSS Zoom/Scale 把它无损放大，
+               让它填满左下角的空间，看起来像原生 App。
+            */
+            transform: scale(1.15); 
+            transform-origin: top center;
+            display: flex;
+            justify-content: center;
+        }
+
+        iframe.weather-iframe {
+            border: none;
+            width: 320px !important; /* 强制宽度适配 iPad 分栏 */
+            height: 480px !important;
+            background: transparent;
         }
         
-        /* --- 右侧：日历 (60%) --- */
+        /* --- 右侧：日历 (58%) --- */
         .right { 
-            flex: 1.2; 
+            flex: 1.16; 
             padding: 20px 20px 10px 20px; 
             display: flex;
             flex-direction: column; 
@@ -148,16 +162,22 @@
         </div>
         
         <div class="weather-box">
-            <!-- 
-               🔴 修改：切换回经典版 wttr.in (去掉 v2)
-               Tianjin = 城市
-               _0tqm = 
-                 0: 经典视图 (显示早/中/晚/夜，更符合"未来几小时")
-                 t: 透明
-                 q: 安静模式
-                 m: 强制摄氏度
-            -->
-            <img id="weather-img" src="" alt="Weather">
+            <div class="weather-frame-wrapper">
+                <!-- 
+                    Meteoblue 天气插件
+                    - 城市: 天津 (Tianjin)
+                    - 模式: 3小时预报 (Three Hour)
+                    - 颜色: 深色模式 (Dark)
+                    - 单位: 摄氏度 (Celsius)
+                -->
+                <iframe class="weather-iframe" 
+                    src="https://www.meteoblue.com/en/weather/widget/three/tianjin_china_101652?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=dark"  
+                    frameborder="0" 
+                    scrolling="NO" 
+                    allowtransparency="true" 
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox">
+                </iframe>
+            </div>
         </div>
     </div>
 
@@ -189,15 +209,7 @@
         document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
     }
 
-    // 2. 天气
-    function updateWeather() {
-        var img = document.getElementById("weather-img");
-        // 🔴 修改：使用经典版 API，去掉 v2 前缀
-        // 🔴 修改：每小时更新一次时间戳
-        img.src = "https://wttr.in/Tianjin_0tqm_lang=zh.png?_=" + new Date().getHours();
-    }
-
-    // 3. 日历
+    // 2. 日历
     function generateCalendar() {
         var now = new Date();
         var year = now.getFullYear();
@@ -247,11 +259,8 @@
 
     updateClock();
     generateCalendar();
-    updateWeather();
 
     setInterval(updateClock, 1000); 
-    // 🔴 修改：每 1 小时 (3600000 ms) 刷新一次天气
-    setInterval(updateWeather, 3600000); 
     setInterval(generateCalendar, 3600000); 
 
     document.addEventListener('touchmove', function(e) { e.preventDefault(); }, false);
