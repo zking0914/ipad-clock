@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>iPad 3 Dashboard</title>
+    <title>iPad 3 Weather Station</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <style>
-        /* 全局样式 */
+        /* --- 全局重置 --- */
         body { 
             background: #000; 
             color: #fff; 
@@ -18,6 +18,7 @@
             width: 100%;
             height: 100%;
             -webkit-font-smoothing: antialiased; 
+            -webkit-user-select: none;
         }
         
         .container { 
@@ -27,82 +28,103 @@
             box-sizing: border-box; 
         }
         
-        /* --- 左侧：时间 + 天气 (42%) --- */
+        /* --- 左侧：时钟 + 详细气象 (45%) --- */
         .left { 
-            flex: 0.84; 
+            flex: 0.9; 
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-start;
-            align-items: center; 
             border-right: 1px solid #333; 
-            padding: 40px 10px 0 10px; 
+            padding: 30px 20px; 
             background: #000;
         }
         
-        /* 时间日期区域 */
+        /* 1. 顶部时间 */
         .time-group {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
-
         #time { 
-            font-size: 13vw; 
+            font-size: 14vw; 
             font-weight: 800; 
             line-height: 1;
             letter-spacing: -3px;
             margin-bottom: 5px;
             font-variant-numeric: tabular-nums;
         }
-        
         #date { 
             font-size: 4vw; 
             color: #bbb; 
-            font-weight: 400;
         }
 
-        /* 天气容器 */
-        .weather-box {
-            width: 100%;
-            flex: 1; 
+        /* 2. 气象数据面板 (Grid布局) */
+        .weather-grid {
+            flex: 1;
             display: flex;
-            justify-content: center;
-            align-items: center; /* 居中 */
-            position: relative;
-            overflow: hidden;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-content: flex-start;
         }
 
-        /* 天气图片 */
-        .weather-box img {
-            width: 110%; /* 稍微放大一点撑满宽度 */
-            height: auto;
-            object-fit: contain;
-            /* 
-               这次不再使用反色(invert)，
-               因为 wttr.in 原生就是黑底彩色字，
-               在 iPad 的黑屏幕上显示效果最好。
-            */
-            opacity: 0.9; 
+        /* 每个数据块 */
+        .w-item {
+            width: 48%; /* 两列 */
+            margin-bottom: 25px;
+            background: #111;
+            border-radius: 12px;
+            padding: 15px 10px;
+            box-sizing: border-box;
+            text-align: center;
+            border: 1px solid #222;
+        }
+
+        .w-label {
+            font-size: 2.5vw;
+            color: #888;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .w-value {
+            font-size: 5vw;
+            font-weight: bold;
+            display: block;
+            color: #fff;
+        }
+
+        /* 特殊颜色高亮 */
+        .aqi-good { color: #00e400; }
+        .aqi-mod { color: #ffff00; }
+        .aqi-bad { color: #ff7e00; }
+        
+        /* 温度大显示 */
+        .temp-big {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        .temp-val {
+            font-size: 12vw;
+            font-weight: 300;
         }
         
-        /* --- 右侧：日历 (58%) --- */
+        /* --- 右侧：日历 (55%) --- */
         .right { 
-            flex: 1.16; 
-            padding: 20px 20px 10px 20px; 
+            flex: 1.1; 
+            padding: 20px; 
             display: flex;
             flex-direction: column; 
-            justify-content: flex-start; 
         }
 
         #calendar-header {
             font-size: 3.5vw; 
             font-weight: bold;
             color: #fff;
-            width: 100%;
             text-align: center;
             margin-bottom: 10px; 
-            padding-bottom: 5px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #333;
-            flex-shrink: 0; 
         }
 
         #calendar-table {
@@ -111,33 +133,10 @@
             border-collapse: collapse;
             table-layout: fixed;
         }
-
-        #calendar-table th {
-            font-size: 3vw;
-            color: #ff3b30; 
-            height: 10%; 
-            font-weight: normal;
-            vertical-align: bottom;
-            padding-bottom: 5px;
-        }
-
-        #calendar-table td {
-            font-size: 5vw; 
-            color: #555;
-            vertical-align: middle;
-            text-align: center;
-            font-weight: 400;
-        }
-
+        #calendar-table th { font-size: 3vw; color: #ff3b30; height: 10%; font-weight: normal; vertical-align: bottom; }
+        #calendar-table td { font-size: 5vw; color: #555; vertical-align: middle; text-align: center; }
         #calendar-table td.current-month { color: #fff; font-weight: 600; }
-        
-        #calendar-table td.today {
-            background: #fff;
-            color: #000;
-            border-radius: 12px;
-            font-weight: 900; 
-        }
-        
+        #calendar-table td.today { background: #fff; color: #000; border-radius: 12px; font-weight: 900; }
         #calendar-table td.weekend { color: #ff453a; opacity: 0.8; }
     </style>
 </head>
@@ -145,23 +144,43 @@
 
 <div class="container">
     <div class="left">
+        <!-- 时间 -->
         <div class="time-group">
             <div id="time">00:00</div>
             <div id="date">Loading...</div>
         </div>
         
-        <div class="weather-box">
-            <!-- 
-                URL 参数详解：
-                Tianjin = 强制天津
-                _0tqm = 
-                  0: 经典视图 (显示当天 早/中/晚/夜，字最大)
-                  t: 透明背景 (融合网页背景)
-                  q: 安静模式 (去除多余文字)
-                  m: 强制摄氏度
-                lang=zh = 中文
-            -->
-            <img id="weather-img" src="" alt="Weather">
+        <!-- 气象数据 -->
+        <div class="weather-grid">
+            <!-- 1. 当前温度 (独占一行) -->
+            <div class="w-item temp-big">
+                <span class="w-value temp-val" id="w-temp">--°</span>
+                <span class="w-label" id="w-desc">加载中...</span>
+            </div>
+
+            <!-- 2. 湿度 -->
+            <div class="w-item">
+                <span class="w-label">湿度</span>
+                <span class="w-value" id="w-hum">--%</span>
+            </div>
+
+            <!-- 3. 空气质量 -->
+            <div class="w-item">
+                <span class="w-label">空气质量 (AQI)</span>
+                <span class="w-value" id="w-aqi">--</span>
+            </div>
+
+            <!-- 4. 风向风速 -->
+            <div class="w-item">
+                <span class="w-label">风力</span>
+                <span class="w-value" style="font-size: 3.5vw;" id="w-wind">--</span>
+            </div>
+
+            <!-- 5. 紫外线 -->
+            <div class="w-item">
+                <span class="w-label">紫外线强度</span>
+                <span class="w-value" id="w-uv">--</span>
+            </div>
         </div>
     </div>
 
@@ -169,9 +188,7 @@
         <div id="calendar-header"></div>
         <table id="calendar-table">
             <thead>
-                <tr>
-                    <th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th>
-                </tr>
+                <tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>
             </thead>
             <tbody id="calendar-body"></tbody>
         </table>
@@ -179,25 +196,103 @@
 </div>
 
 <script>
+    // --- 配置：天津坐标 ---
+    // 你可以去 maps.google.com 查任何城市的经纬度
+    var LAT = 39.14; // 纬度
+    var LON = 117.20; // 经度
+
     // 1. 时钟
     function updateClock() {
         var now = new Date();
         var h = now.getHours();
         var m = now.getMinutes();
         var weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-        
         if(h < 10) h = "0" + h;
         if(m < 10) m = "0" + m;
-        
         document.getElementById("time").innerText = h + ":" + m;
         document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
     }
 
-    // 2. 天气
+    // 2. 天气 API (使用 Open-Meteo, iOS 9 兼容写法)
     function updateWeather() {
-        var img = document.getElementById("weather-img");
-        // 使用时间戳，每小时强制刷新一次
-        img.src = "https://wttr.in/Tianjin_0tqm_lang=zh.png?_=" + new Date().getHours();
+        // 请求1: 常规天气 (温度, 湿度, 风, 天气代码, 每日UV)
+        // 注意：current_weather=true 已弃用，改用 current=...
+        var urlWeather = "https://api.open-meteo.com/v1/forecast?latitude=" + LAT + "&longitude=" + LON + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=uv_index_max&timezone=Asia%2FShanghai";
+        
+        // 请求2: 空气质量
+        var urlAir = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + LAT + "&longitude=" + LON + "&current=us_aqi";
+
+        // iOS 9 不支持 fetch，使用 XMLHttpRequest
+        makeRequest(urlWeather, function(data) {
+            if(!data || !data.current) return;
+            
+            // 温度
+            document.getElementById("w-temp").innerText = Math.round(data.current.temperature_2m) + "°";
+            // 湿度
+            document.getElementById("w-hum").innerText = data.current.relative_humidity_2m + "%";
+            // 天气描述
+            document.getElementById("w-desc").innerText = getWeatherDesc(data.current.weather_code);
+            // 风
+            var windDir = getWindDir(data.current.wind_direction_10m);
+            var windSpd = data.current.wind_speed_10m; // km/h
+            // 简单转换风速级别 (约等于)
+            var windLvl = windSpd < 1 ? 0 : Math.ceil(windSpd / 5); 
+            document.getElementById("w-wind").innerText = windDir + " " + windLvl + "级";
+
+            // 紫外线 (取今日最大值)
+            if(data.daily && data.daily.uv_index_max && data.daily.uv_index_max.length > 0) {
+                document.getElementById("w-uv").innerText = data.daily.uv_index_max[0];
+            }
+        });
+
+        makeRequest(urlAir, function(data) {
+            if(!data || !data.current) return;
+            var aqi = data.current.us_aqi;
+            var el = document.getElementById("w-aqi");
+            el.innerText = aqi;
+            
+            // AQI 颜色
+            el.className = "w-value"; // 重置
+            if(aqi <= 50) el.className += " aqi-good";
+            else if(aqi <= 100) el.className += " aqi-mod";
+            else el.className += " aqi-bad";
+        });
+    }
+
+    // 简单的 Ajax 封装 (兼容 iOS 9)
+    function makeRequest(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    callback(resp);
+                } catch(e) {}
+            }
+        };
+        xhr.send();
+    }
+
+    // 天气代码转中文
+    function getWeatherDesc(code) {
+        // WMO Weather interpretation codes (WW)
+        if(code === 0) return "晴";
+        if(code >= 1 && code <= 3) return "多云";
+        if(code >= 45 && code <= 48) return "雾";
+        if(code >= 51 && code <= 55) return "毛毛雨";
+        if(code >= 61 && code <= 65) return "下雨";
+        if(code >= 71 && code <= 77) return "下雪";
+        if(code >= 80 && code <= 82) return "阵雨";
+        if(code >= 95) return "雷雨";
+        return "未知";
+    }
+
+    // 风向角度转文字
+    function getWindDir(deg) {
+        var val = Math.floor((deg / 45) + 0.5);
+        var arr = ["北风", "东北风", "东风", "东南风", "南风", "西南风", "西风", "西北风"];
+        return arr[val % 8];
     }
 
     // 3. 日历
@@ -206,12 +301,10 @@
         var year = now.getFullYear();
         var month = now.getMonth(); 
         var today = now.getDate();
-
         document.getElementById("calendar-header").innerText = year + "年 " + (month + 1) + "月";
 
         var firstDay = new Date(year, month, 1).getDay();
         var daysInMonth = new Date(year, month + 1, 0).getDate();
-        
         var tbl = document.getElementById("calendar-body");
         tbl.innerHTML = ""; 
 
@@ -219,26 +312,15 @@
         for (var i = 0; i < 6; i++) {
             var row = document.createElement("tr");
             var hasDays = false;
-
             for (var j = 0; j < 7; j++) {
                 var cell = document.createElement("td");
-                
-                if (i === 0 && j < firstDay) {
-                    cell.innerText = "";
-                } else if (date > daysInMonth) {
-                    cell.innerText = "";
-                } else {
+                if (i === 0 && j < firstDay) { cell.innerText = ""; } 
+                else if (date > daysInMonth) { cell.innerText = ""; } 
+                else {
                     cell.innerText = date;
                     cell.className = "current-month";
-                    
-                    if (date === today) {
-                        cell.className += " today";
-                    }
-                    if (j === 0 || j === 6) {
-                        if(date !== today) {
-                             cell.className += " weekend";
-                        }
-                    }
+                    if (date === today) cell.className += " today";
+                    if (j === 0 || j === 6) { if(date !== today) cell.className += " weekend"; }
                     date++;
                     hasDays = true;
                 }
@@ -253,7 +335,7 @@
     updateWeather();
 
     setInterval(updateClock, 1000); 
-    setInterval(updateWeather, 3600000); // 1小时刷新天气
+    setInterval(updateWeather, 1800000); // 30分钟更新一次数据
     setInterval(generateCalendar, 3600000); 
 
     document.addEventListener('touchmove', function(e) { e.preventDefault(); }, false);
