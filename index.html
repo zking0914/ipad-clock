@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>iPad Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        .container { 
+            display: flex; 
+            height: 100vh; 
+            width: 100vw;
+        }
+        
+        /* --- 左侧区域 (时间+天气) --- */
+        .left { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            border-right: 1px solid #333; 
+            padding: 20px;
+        }
+        
+        #time { 
+            font-size: 16vw; 
+            font-weight: bold; 
+            line-height: 0.9; 
+            letter-spacing: -5px;
+        }
+        
+        #date { 
+            font-size: 4vw; 
+            color: #ccc; 
+            margin-top: 10px; 
+            margin-bottom: 40px; 
+        }
+
+        #weather-container {
+            width: 80%;
+            height: 100px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- 右侧区域 (日历) --- */
+        .right { 
+            flex: 1.2; 
+            padding: 0;
+            background: #111;
+        }
+        
+        .calendar-frame { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            filter: invert(1) hue-rotate(180deg) contrast(0.9); 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left">
+        <div id="time">00:00</div>
+        <div id="date">Loading...</div>
+        
+        <!-- 天气插件：注意必须用 https -->
+        <div id="weather-container">
+            <iframe scrolling="no" src="https://i.tianqi.com/index.php?c=code&id=12&color=%23FFFFFF&icon=1&py=tianjin&num=1&site=12" frameborder="0" width="100%" height="80" allowtransparency="true"></iframe>
+        </div>
+    </div>
+
+    <div class="right">
+        <!-- 谷歌日历 -->
+        <iframe class="calendar-frame" src="https://calendar.google.com/calendar/embed?src=zh-cn.china%23holiday%40group.v.calendar.google.com&ctz=Asia%2FShanghai&showTitle=0&showNav=0&showDate=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=MONTH"></iframe>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('touchmove', function(e) { e.preventDefault(); }, false);
+
+    function updateClock() {
+        var now = new Date();
+        var h = now.getHours();
+        var m = now.getMinutes();
+        var weeks = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+        
+        if(h < 10) h = "0" + h;
+        if(m < 10) m = "0" + m;
+        
+        document.getElementById("time").innerText = h + ":" + m;
+        document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
+    }
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
