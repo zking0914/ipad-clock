@@ -25,94 +25,109 @@
             display: flex; 
             height: 100vh; 
             width: 100vw;
+            box-sizing: border-box; /* 确保padding不撑大容器 */
         }
         
-        /* --- 左侧：时间 + 天气 (45%) --- */
+        /* --- 左侧：时间 + 天气 (40%) --- */
         .left { 
-            flex: 0.9; 
+            flex: 0.8; 
             display: flex; 
             flex-direction: column; 
-            justify-content: center; 
+            /* 内容垂直分布：顶部时间，底部天气 */
+            justify-content: space-between; 
             align-items: center; 
-            border-right: 2px solid #222; 
+            border-right: 1px solid #333; 
+            padding: 30px 10px;
             background: #000;
         }
         
+        /* 时间日期区域 */
+        .time-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+
         #time { 
-            font-size: 16vw; 
+            font-size: 17vw; 
             font-weight: 800; 
             line-height: 0.9; 
-            letter-spacing: -3px;
-            margin-bottom: 10px;
-            font-variant-numeric: tabular-nums; 
+            letter-spacing: -4px;
+            margin-bottom: 5px;
         }
         
         #date { 
             font-size: 4.5vw; 
             color: #bbb; 
-            margin-bottom: 50px; 
             font-weight: 400;
         }
 
+        /* 天气容器 - 核心修改 */
         .weather-box {
             width: 100%;
-            height: 180px; 
+            /* 限制最大高度，防止把时间挤没 */
+            flex: 1; 
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-end; /* 沉底显示 */
             filter: invert(1) hue-rotate(180deg);
+            padding-bottom: 20px;
         }
 
         .weather-box img {
-            width: auto;
-            height: auto;
-            transform: scale(1.6); 
-            image-rendering: -webkit-optimize-contrast;
+            /* 🔴 修改：取消强制缩放，改为自适应 */
+            width: 95%;  /* 宽度占满 */
+            height: auto; /* 高度自动 */
+            object-fit: contain; /* 保证图片完整显示 */
+            max-height: 250px; /* 限制最大高度 */
         }
         
-        /* --- 右侧：日历 (55%) --- */
+        /* --- 右侧：日历 (60%) --- */
         .right { 
-            flex: 1.1; 
-            padding: 20px 30px; 
+            flex: 1.2; 
+            padding: 20px 20px 10px 20px; /* 上右下左 */
             display: flex;
-            flex-direction: column; /* 改为垂直排列，以便放标题 */
-            justify-content: center;
-            align-items: center;
+            flex-direction: column; 
+            justify-content: flex-start; /* 从顶部开始排列 */
         }
 
-        /* 新增：日历顶部的年月标题 */
+        /* 🔴 修改：更紧凑的标题 */
         #calendar-header {
-            font-size: 5vw;
+            font-size: 3.5vw; /* 字体改小 */
             font-weight: bold;
             color: #fff;
             width: 100%;
             text-align: center;
-            margin-bottom: 20px; /* 和表格拉开距离 */
-            padding-bottom: 10px;
-            border-bottom: 2px solid #333; /* 加一条分割线 */
+            margin-bottom: 10px; /* 减小间距 */
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            flex-shrink: 0; /* 防止标题被挤压 */
         }
 
+        /* 日历表格 */
         #calendar-table {
             width: 100%;
-            height: 85%; /* 稍微减小高度，给标题腾位置 */
+            /* 🔴 修改：自动填充剩余高度 */
+            flex-grow: 1; 
             border-collapse: collapse;
             table-layout: fixed;
         }
 
         #calendar-table th {
-            font-size: 3.5vw;
+            font-size: 3vw;
             color: #ff3b30; 
-            padding-bottom: 10px;
+            height: 10%; /* 表头占 10% 高度 */
             font-weight: normal;
+            vertical-align: bottom;
+            padding-bottom: 5px;
         }
 
         #calendar-table td {
-            font-size: 5.5vw; 
+            font-size: 5vw; 
             color: #555;
             vertical-align: middle;
             text-align: center;
             font-weight: 400;
-            height: 14%; 
+            /* 🔴 修改：不再固定高度，而是由表格自动均分 */
         }
 
         #calendar-table td.current-month { color: #fff; font-weight: 600; }
@@ -120,7 +135,7 @@
         #calendar-table td.today {
             background: #fff;
             color: #000;
-            border-radius: 14px;
+            border-radius: 12px;
             font-weight: 900; 
         }
         
@@ -131,16 +146,19 @@
 
 <div class="container">
     <div class="left">
-        <div id="time">00:00</div>
-        <div id="date">Loading...</div>
+        <div class="time-group">
+            <div id="time">00:00</div>
+            <div id="date">Loading...</div>
+        </div>
         
         <div class="weather-box">
+            <!-- 图片自适应，保证看全 -->
             <img id="weather-img" src="" alt="Weather">
         </div>
     </div>
 
     <div class="right">
-        <!-- 新增：显示年月 -->
+        <!-- 紧凑的标题 -->
         <div id="calendar-header"></div>
         
         <table id="calendar-table">
@@ -166,24 +184,24 @@
         if(m < 10) m = "0" + m;
         
         document.getElementById("time").innerText = h + ":" + m;
-        // 左侧只显示 日期和星期
         document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
     }
 
     // 2. 天气
     function updateWeather() {
         var img = document.getElementById("weather-img");
+        // 链接末尾加时间戳
         img.src = "https://v2.wttr.in/Tianjin_0tqm_lang=zh.png?_=" + new Date().getTime();
     }
 
-    // 3. 日历
+    // 3. 日历 (自适应行高版)
     function generateCalendar() {
         var now = new Date();
         var year = now.getFullYear();
-        var month = now.getMonth(); // 0-11
+        var month = now.getMonth(); 
         var today = now.getDate();
 
-        // 🔴 更新右侧顶部的年月标题
+        // 填充标题
         document.getElementById("calendar-header").innerText = year + "年 " + (month + 1) + "月";
 
         var firstDay = new Date(year, month, 1).getDay();
@@ -193,6 +211,7 @@
         tbl.innerHTML = ""; 
 
         var date = 1;
+        // 固定生成 6 行，确保布局稳定
         for (var i = 0; i < 6; i++) {
             var row = document.createElement("tr");
             var hasDays = false;
@@ -221,9 +240,9 @@
                 }
                 row.appendChild(cell);
             }
-            if(hasDays || i < 5) { 
-                tbl.appendChild(row);
-            }
+            // 只要这一行有内容，或者为了撑开版面（即使是空行），都加进去
+            // 这里我们强制加满6行，这样高度就是均匀的
+            tbl.appendChild(row);
         }
     }
 
