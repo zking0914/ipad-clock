@@ -35,16 +35,14 @@
             justify-content: flex-start;
             align-items: center; 
             border-right: 1px solid #333; 
-            padding: 30px 0 0 0; 
+            padding: 40px 10px 0 10px; 
             background: #000;
-            overflow: hidden;
         }
         
         /* 时间日期区域 */
         .time-group {
             text-align: center;
-            margin-bottom: 10px;
-            padding: 0 10px;
+            margin-bottom: 20px;
         }
 
         #time { 
@@ -53,6 +51,7 @@
             line-height: 1;
             letter-spacing: -3px;
             margin-bottom: 5px;
+            font-variant-numeric: tabular-nums;
         }
         
         #date { 
@@ -67,30 +66,22 @@
             flex: 1; 
             display: flex;
             justify-content: center;
-            align-items: center; 
+            align-items: center; /* 居中 */
             position: relative;
-        }
-
-        /* 天气 Iframe 容器 */
-        .weather-frame-wrapper {
-            width: 100%;
-            height: 100%;
             overflow: hidden;
-            /* 
-               放大 1.15 倍以适配 Retina 屏，
-               并确保填满左下角
-            */
-            transform: scale(1.15); 
-            transform-origin: top center;
-            display: flex;
-            justify-content: center;
         }
 
-        iframe.weather-iframe {
-            border: none;
-            width: 320px !important; 
-            height: 480px !important;
-            background: transparent;
+        /* 天气图片 */
+        .weather-box img {
+            width: 110%; /* 稍微放大一点撑满宽度 */
+            height: auto;
+            object-fit: contain;
+            /* 
+               这次不再使用反色(invert)，
+               因为 wttr.in 原生就是黑底彩色字，
+               在 iPad 的黑屏幕上显示效果最好。
+            */
+            opacity: 0.9; 
         }
         
         /* --- 右侧：日历 (58%) --- */
@@ -160,21 +151,17 @@
         </div>
         
         <div class="weather-box">
-            <div class="weather-frame-wrapper">
-                <!-- 
-                    🔴 关键修改：
-                    1. 链接改为 /zh/ 开头，强制中文界面。
-                    2. ID 改为 tianjin_china_1800163 (天津的准确ID)。
-                    3. 参数 geoloc=fixed 放在最前面，强制不使用IP定位。
-                -->
-                <iframe class="weather-iframe" 
-                    src="https://www.meteoblue.com/zh/%E5%A4%A9%E6%B0%94/widget/three/tianjin_china_1800163?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=dark"  
-                    frameborder="0" 
-                    scrolling="NO" 
-                    allowtransparency="true" 
-                    sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox">
-                </iframe>
-            </div>
+            <!-- 
+                URL 参数详解：
+                Tianjin = 强制天津
+                _0tqm = 
+                  0: 经典视图 (显示当天 早/中/晚/夜，字最大)
+                  t: 透明背景 (融合网页背景)
+                  q: 安静模式 (去除多余文字)
+                  m: 强制摄氏度
+                lang=zh = 中文
+            -->
+            <img id="weather-img" src="" alt="Weather">
         </div>
     </div>
 
@@ -206,7 +193,14 @@
         document.getElementById("date").innerText = (now.getMonth() + 1) + "月" + now.getDate() + "日 " + weeks[now.getDay()];
     }
 
-    // 2. 日历
+    // 2. 天气
+    function updateWeather() {
+        var img = document.getElementById("weather-img");
+        // 使用时间戳，每小时强制刷新一次
+        img.src = "https://wttr.in/Tianjin_0tqm_lang=zh.png?_=" + new Date().getHours();
+    }
+
+    // 3. 日历
     function generateCalendar() {
         var now = new Date();
         var year = now.getFullYear();
@@ -256,8 +250,10 @@
 
     updateClock();
     generateCalendar();
+    updateWeather();
 
     setInterval(updateClock, 1000); 
+    setInterval(updateWeather, 3600000); // 1小时刷新天气
     setInterval(generateCalendar, 3600000); 
 
     document.addEventListener('touchmove', function(e) { e.preventDefault(); }, false);
